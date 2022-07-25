@@ -1,4 +1,4 @@
-import {Image, StyleSheet, Text, Dimensions} from 'react-native';
+import {Image, StyleSheet, Dimensions} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import CameraRoll from '@react-native-community/cameraroll';

@@ -1,5 +1,5 @@
 import React from 'react';
-import AppProvider from './context/App';
+import AppProvider from './context/AppContext';
 import {NavigationContainer} from '@react-navigation/native';
 import App from './App';
 

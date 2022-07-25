@@ -1,7 +1,7 @@
 import React from 'react';
 import LoginScreen from './screens/LoginScreen';
 import {Provider as PaperProvider} from 'react-native-paper';
-import {useApp} from './context/App';
+import {useApp} from './context/AppContext';
 import AppStack from './navigation/StackNavigators';
 
 const App = () => {
