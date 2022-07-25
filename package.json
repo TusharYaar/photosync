@@ -16,6 +16,7 @@
     "@react-native-firebase/firestore": "^15.2.0",
     "@react-native-firebase/storage": "^15.2.0",
     "@react-navigation/native": "^6.0.11",
+    "@react-navigation/native-stack": "^6.7.0",
     "@shopify/flash-list": "^1.2.0",
     "fbjs": "^3.0.4",
     "react": "18.0.0",
