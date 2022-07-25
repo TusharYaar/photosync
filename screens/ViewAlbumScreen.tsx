@@ -1,12 +1,16 @@
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, StyleSheet, Text, Dimensions} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import CameraRoll from '@react-native-community/cameraroll';
 
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {AppStackParamList} from '../navigation/StackNavigators';
+import {FlashList} from '@shopify/flash-list';
+import ImageItem from '../components/ImageItem';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ViewAlbum'>;
+
+const screenWidth = Dimensions.get('screen').width;
 
 const ViewAlbumScreen = ({navigation, route}: Props) => {
   const [images, setImages] = useState<string[]>([]);
@@ -24,11 +28,18 @@ const ViewAlbumScreen = ({navigation, route}: Props) => {
     getPhotos();
   }, [getPhotos]);
   return (
-    <View>
-      {images.map((image, index) => (
-        <Image style={styles.imageStyle} source={{uri: image}} />
-      ))}
-    </View>
+    <FlashList
+      data={images}
+      estimatedItemSize={96}
+      numColumns={4}
+      renderItem={data => (
+        <ImageItem
+          uri={data.item}
+          width={screenWidth / 4}
+          onPress={() => navigation.navigate('ViewImage', {uri: data.item})}
+        />
+      )}
+    />
   );
 };
 

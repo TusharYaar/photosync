@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, FlatList, StyleSheet, View} from 'react-native';
+import {Dimensions, StyleSheet} from 'react-native';
 
 import CameraRoll from '@react-native-community/cameraroll';
 import Album from '../components/Album';
 
 import {AppStackParamList} from '../navigation/StackNavigators';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {FlashList} from '@shopify/flash-list';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'AllAlbum'>;
 
@@ -25,21 +26,18 @@ const AllAlbumScreen = ({navigation}: Props) => {
   };
 
   return (
-    <View>
-      {album.length > 0 && (
-        <FlatList
-          numColumns={2}
-          data={album}
-          renderItem={data => (
-            <Album
-              data={data.item}
-              width={screenWidth / 2}
-              onPress={handleOnPress}
-            />
-          )}
+    <FlashList
+      estimatedItemSize={40}
+      numColumns={2}
+      data={album}
+      renderItem={data => (
+        <Album
+          data={data.item}
+          width={screenWidth / 2}
+          onPress={handleOnPress}
         />
       )}
-    </View>
+    />
   );
 };
 
