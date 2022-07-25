@@ -9,12 +9,13 @@ import {Permission, PermissionsAndroid} from 'react-native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 import Contacts from 'react-native-contacts';
+import NetInfo from '@react-native-community/netinfo';
 
 type AppContext = {
   haveStoragePermission: boolean;
   haveContactPermission: boolean;
   contacts?: Contacts.Contact[];
-  isOnline: boolean;
+  isOnline: boolean | null;
   isLoggedIn: boolean;
   user: FirebaseAuthTypes.User | null;
 };
@@ -35,7 +36,7 @@ export const useApp = () => useContext(AppContext);
 const AppProvider = ({children}: {children: React.ReactNode}) => {
   const [haveStoragePermission, setHaveStoragePermission] = useState(false);
   const [haveContactPermission, setHaveContactPermission] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean | null>(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
@@ -55,7 +56,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
     if (hasContactPermission) setHaveContactPermission(hasContactPermission);
     else request.push(contactPermission);
 
-    if (hasStoragePermission) setHaveContactPermission(hasStoragePermission);
+    if (hasStoragePermission) setHaveStoragePermission(hasStoragePermission);
     else request.push(storagePermission);
 
     if (request.length > 0) {
@@ -88,6 +89,19 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         setContacts(data);
       });
   }, [haveContactPermission]);
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isInternetReachable);
+      // dispatch(
+      //   updateIsOnline(state.isInternetReachable === false ? false : true),
+      // );
+      // if (state.isInternetReachable === false) val.value = withTiming(30);
+
+      // if (state.isInternetReachable) val.value = withDelay(1500, withTiming(0));
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <AppContext.Provider
@@ -99,7 +113,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         user,
         contacts,
       }}>
-      {children}
+      <>{children}</>
     </AppContext.Provider>
   );
 };
