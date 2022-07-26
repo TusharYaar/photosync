@@ -1,19 +1,23 @@
 import React, {useState} from 'react';
-import {Button, TextInput, StyleSheet} from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
+
+import {Button, Text, TextInput} from 'react-native-paper';
 
 function LoginScreen() {
   // If null, no SMS has been sent
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
 
+  const [number, setNumber] = useState('');
   const [code, setCode] = useState('');
 
-  // Handle the button press
-  async function signInWithPhoneNumber(phoneNumber: string) {
-    const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-    setConfirm(confirmation);
-  }
+  const handlePressSignIn = async () => {
+    if (number.length > 5) {
+      const confirmation = await auth().signInWithPhoneNumber(number);
+      setConfirm(confirmation);
+    }
+  };
 
   async function confirmCode() {
     if (confirm === null) return;
@@ -26,17 +30,21 @@ function LoginScreen() {
 
   if (!confirm) {
     return (
-      <Button
-        title="Phone Number Sign In"
-        onPress={() => signInWithPhoneNumber('+918989614001')}
-      />
+      <View>
+        <TextInput
+          value={number}
+          onChangeText={text => setNumber(text)}
+          keyboardType="phone-pad"
+        />
+        <Button onPress={handlePressSignIn}>Sign In With Phone</Button>
+      </View>
     );
   }
 
   return (
     <>
       <TextInput value={code} onChangeText={text => setCode(text)} />
-      <Button title="Confirm Code" onPress={() => confirmCode()} />
+      <Button onPress={() => confirmCode()}>Confirm</Button>
     </>
   );
 }

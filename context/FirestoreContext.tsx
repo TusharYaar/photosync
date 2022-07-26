@@ -31,16 +31,19 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
   const [sharedByUser, setSharedByUser] = useState<any[]>([]);
   const [sharedWithUser, setSharedWithUser] = useState([]);
 
-  // useEffect(() => {
-  //   if (user) {
-  //     const shared = firestore()
-  //       .collection('Photos')
-  //       .where('sharedWith', 'array-contains', user.phoneNumber)
-  //       .onSnapshot(() => {});
-  //     // Stop listening for updates when no longer required
-  //     return () => shared();
-  //   }
-  // }, [user]);
+  useEffect(() => {
+    if (user) {
+      const shared = firestore()
+        .collection('Photos')
+        .where('sharedWith', 'array-contains', user.phoneNumber)
+        .onSnapshot(documentSnapshot => {
+          if (documentSnapshot)
+            documentSnapshot.forEach(d => console.log(d.data()));
+        });
+      // Stop listening for updates when no longer required
+      return () => shared();
+    }
+  }, [user]);
   useEffect(() => {
     if (user) {
       firestore()
