@@ -7,7 +7,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import AllAlbumScreen from '../screens/AllAlbumScreen';
 import ViewAlbumScreen from '../screens/ViewAlbumScreen';
 import ViewImageScreen from '../screens/ViewImageScreen';
-
+import ViewSyncAlbumScreen from '../screens/ViewSyncAlbumScreen';
 export type AppStackParamList = {
   AllAlbum: undefined;
   ViewAlbum: {data: Album};
@@ -15,6 +15,7 @@ export type AppStackParamList = {
     uri: string;
   };
   SelectContact: undefined;
+  ViewSyncAlbum: undefined;
 };
 const AppNavigator = createNativeStackNavigator<AppStackParamList>();
 
@@ -24,6 +25,10 @@ const AppStack = () => {
       <AppNavigator.Screen name="AllAlbum" component={AllAlbumScreen} />
       <AppNavigator.Screen name="ViewAlbum" component={ViewAlbumScreen} />
       <AppNavigator.Screen name="ViewImage" component={ViewImageScreen} />
+      <AppNavigator.Screen
+        name="ViewSyncAlbum"
+        component={ViewSyncAlbumScreen}
+      />
     </AppNavigator.Navigator>
   );
 };

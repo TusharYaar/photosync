@@ -32,7 +32,7 @@ const AllAlbumScreen = ({navigation}: Props) => {
 
   const handleOnPress = (data: CameraRoll.Album) => {
     if (data.title === 'Photosync') {
-      return;
+      navigation.navigate('ViewSyncAlbum');
     } else
       navigation.navigate('ViewAlbum', {
         data,
