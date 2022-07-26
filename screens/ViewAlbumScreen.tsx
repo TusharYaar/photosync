@@ -17,7 +17,7 @@ const ViewAlbumScreen = ({navigation, route}: Props) => {
 
   const getPhotos = useCallback(async () => {
     const d = await CameraRoll.getPhotos({
-      first: 24,
+      first: 240,
       assetType: 'All',
       groupName: route.params.data.title,
     });

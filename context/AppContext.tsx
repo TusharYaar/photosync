@@ -86,6 +86,9 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   useEffect(() => {
     if (haveContactPermission)
       Contacts.getAllWithoutPhotos().then(data => {
+        data
+          .filter(d => d.phoneNumbers.length > 0)
+          .sort((a, b) => b.displayName.localeCompare(a.displayName));
         setContacts(data);
       });
   }, [haveContactPermission]);

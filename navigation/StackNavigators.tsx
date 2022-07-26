@@ -14,6 +14,7 @@ export type AppStackParamList = {
   ViewImage: {
     uri: string;
   };
+  SelectContact: undefined;
 };
 const AppNavigator = createNativeStackNavigator<AppStackParamList>();
 

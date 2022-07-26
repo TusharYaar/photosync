@@ -7,11 +7,14 @@ import React, {
 } from 'react';
 
 import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 import {useApp} from './AppContext';
+import {PhotoDocument} from '../util/Types';
 
 type FirestoreContext = {
-  sharedByUser: any[];
-  sharedWithUser: any[];
+  sharedByUser: PhotoDocument[];
+  sharedWithUser: PhotoDocument[];
+  addImageDocForShare?: (doc: Omit<PhotoDocument, 'id'>) => void;
 };
 
 const initialState: FirestoreContext = {
@@ -28,16 +31,16 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
   const [sharedByUser, setSharedByUser] = useState<any[]>([]);
   const [sharedWithUser, setSharedWithUser] = useState([]);
 
-  useEffect(() => {
-    if (user) {
-      const shared = firestore()
-        .collection('Photos')
-        .where('sharedWith', 'array-contains', user.phoneNumber)
-        .onSnapshot(() => {});
-      // Stop listening for updates when no longer required
-      return () => shared();
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     const shared = firestore()
+  //       .collection('Photos')
+  //       .where('sharedWith', 'array-contains', user.phoneNumber)
+  //       .onSnapshot(() => {});
+  //     // Stop listening for updates when no longer required
+  //     return () => shared();
+  //   }
+  // }, [user]);
   useEffect(() => {
     if (user) {
       firestore()
@@ -58,11 +61,28 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
     }
   }, [user]);
 
+  const addImageDocForShare = async (doc: Omit<PhotoDocument, 'id'>) => {
+    console.log(doc);
+    const path = await uploadImageToStorage(doc);
+    console.log(path);
+    await firestore()
+      .collection('Photos')
+      .add({...doc, path});
+  };
+
+  const uploadImageToStorage = async (doc: Omit<PhotoDocument, 'id'>) => {
+    const reference = storage().ref(`${doc.owner}/${doc.name}`);
+    await reference.putFile(doc.path);
+    const path = await reference.getDownloadURL();
+    return path;
+  };
+
   return (
     <FirestoreContext.Provider
       value={{
         sharedByUser,
         sharedWithUser,
+        addImageDocForShare,
       }}>
       {children}
     </FirestoreContext.Provider>
