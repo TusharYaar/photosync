@@ -16,7 +16,7 @@ const Album = ({data, width, onPress}: Props) => {
   const getPhotos = useCallback(async () => {
     const d = await CameraRoll.getPhotos({
       first: 4,
-      assetType: 'All',
+      assetType: 'Photos',
       groupName: data.title,
     });
     setImages(d.edges.map(node => node.node.image.uri));

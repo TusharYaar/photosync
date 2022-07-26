@@ -16,7 +16,7 @@ const AllAlbumScreen = ({navigation}: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [album, setAlbum] = useState<CameraRoll.Album[]>([]);
   useEffect(() => {
-    CameraRoll.getAlbums({assetType: 'All'}).then(data => setAlbum(data));
+    CameraRoll.getAlbums({assetType: 'Photos'}).then(data => setAlbum(data));
   }, []);
 
   const handleOnPress = (data: CameraRoll.Album) => {
