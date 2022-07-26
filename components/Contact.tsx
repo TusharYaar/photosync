@@ -23,13 +23,17 @@ const Contact = ({data, onPress, isSelected = false}: Props) => {
   return (
     <Surface style={isSelected ? styles.selected : null}>
       <TouchableRipple onPress={handleOnPress}>
-        <View>
-          <Avatar.Icon size={24} icon="account" />
-          <View>
+        <View style={styles.container}>
+          <Avatar.Icon size={34} icon={isSelected ? 'check-bold' : 'account'} />
+          <View style={styles.textContainer}>
             <Title>{data.givenName}</Title>
             <View>
               {data.phoneNumbers.length > 0 && (
-                <Caption>{data.phoneNumbers[0].number}</Caption>
+                <Caption>
+                  {data.phoneNumbers[0].number
+                    ? data.phoneNumbers[0].number
+                    : 'No Number'}
+                </Caption>
               )}
             </View>
           </View>
@@ -44,5 +48,15 @@ export default Contact;
 const styles = StyleSheet.create({
   selected: {
     backgroundColor: 'green',
+  },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 5,
+  },
+  textContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
 });

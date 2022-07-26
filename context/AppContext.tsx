@@ -14,7 +14,7 @@ import NetInfo from '@react-native-community/netinfo';
 type AppContext = {
   haveStoragePermission: boolean;
   haveContactPermission: boolean;
-  contacts?: Contacts.Contact[];
+  contacts: Contacts.Contact[];
   isOnline: boolean | null;
   isLoggedIn: boolean;
   user: FirebaseAuthTypes.User | null;
@@ -85,10 +85,10 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
 
   useEffect(() => {
     if (haveContactPermission)
-      Contacts.getAllWithoutPhotos().then(data => {
-        data
-          .filter(d => d.phoneNumbers.length > 0)
-          .sort((a, b) => b.displayName.localeCompare(a.displayName));
+      Contacts.getAll().then(data => {
+        data = data
+          .filter(d => d.phoneNumbers.length === 1)
+          .sort((a, b) => a.displayName.localeCompare(b.displayName));
         setContacts(data);
       });
   }, [haveContactPermission]);
