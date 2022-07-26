@@ -9,7 +9,7 @@ import React, {
 import firestore from '@react-native-firebase/firestore';
 import storage from '@react-native-firebase/storage';
 import {useApp} from './AppContext';
-import {PhotoDocument} from '../util/Types';
+import {PhotoDocument} from '../util/types';
 
 type FirestoreContext = {
   sharedByUser: PhotoDocument[];
@@ -29,7 +29,7 @@ export const useFirestore = () => useContext(FirestoreContext);
 const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
   const {user} = useApp();
   const [sharedByUser, setSharedByUser] = useState<any[]>([]);
-  const [sharedWithUser, setSharedWithUser] = useState([]);
+  const [sharedWithUser, setSharedWithUser] = useState<PhotoDocument[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -37,8 +37,13 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
         .collection('Photos')
         .where('sharedWith', 'array-contains', user.phoneNumber)
         .onSnapshot(documentSnapshot => {
-          if (documentSnapshot)
-            documentSnapshot.forEach(d => console.log(d.data()));
+          if (documentSnapshot) {
+            const data: PhotoDocument[] = [];
+            documentSnapshot.forEach(d =>
+              data.push({...d.data(), id: d.id} as PhotoDocument),
+            );
+            setSharedWithUser(data);
+          }
         });
       // Stop listening for updates when no longer required
       return () => shared();
