@@ -10,6 +10,7 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 import Contacts from 'react-native-contacts';
 import NetInfo from '@react-native-community/netinfo';
+import {Snackbar} from 'react-native-paper';
 
 type AppContext = {
   haveStoragePermission: boolean;
@@ -18,6 +19,7 @@ type AppContext = {
   isOnline: boolean | null;
   isLoggedIn: boolean;
   user: FirebaseAuthTypes.User | null;
+  showSnackbar: (message: string) => void;
 };
 
 const initialState: AppContext = {
@@ -27,6 +29,7 @@ const initialState: AppContext = {
   isOnline: true,
   isLoggedIn: false,
   user: null,
+  showSnackbar: (message: string) => {},
   //   theme: 'light',
 };
 
@@ -40,6 +43,8 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
+
+  const [snackbar, setSnackbar] = useState({message: '', visible: false});
 
   const checkAndroidPermission = useCallback(async () => {
     const contactPermission = PermissionsAndroid.PERMISSIONS.READ_CONTACTS;
@@ -106,6 +111,13 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
     return unsubscribe;
   }, []);
 
+  const showSnackbar = (message: string) => {
+    setSnackbar({message, visible: true});
+  };
+  const hideSnackbar = () => {
+    setSnackbar(state => ({...state, visible: false}));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -115,8 +127,17 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         isLoggedIn,
         user,
         contacts,
+        showSnackbar,
       }}>
-      <>{children}</>
+      <>
+        {children}
+        <Snackbar
+          visible={snackbar.visible}
+          duration={4000}
+          onDismiss={hideSnackbar}>
+          {snackbar.message}
+        </Snackbar>
+      </>
     </AppContext.Provider>
   );
 };

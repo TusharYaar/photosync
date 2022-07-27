@@ -27,7 +27,7 @@ export const FirestoreContext = createContext(initialState);
 export const useFirestore = () => useContext(FirestoreContext);
 
 const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
-  const {user} = useApp();
+  const {user, showSnackbar} = useApp();
   const [sharedByUser, setSharedByUser] = useState<any[]>([]);
   const [sharedWithUser, setSharedWithUser] = useState<PhotoDocument[]>([]);
 
@@ -70,15 +70,15 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
   }, [user]);
 
   const addImageDocForShare = async (doc: Omit<PhotoDocument, 'id'>) => {
-    console.log(doc);
     const path = await uploadImageToStorage(doc);
-    console.log(path);
     await firestore()
       .collection('Photos')
       .add({...doc, path});
+    showSnackbar('Shared');
   };
 
   const uploadImageToStorage = async (doc: Omit<PhotoDocument, 'id'>) => {
+    showSnackbar('Uploading');
     const reference = storage().ref(`${doc.owner}/${doc.name}`);
     await reference.putFile(doc.path);
     const path = await reference.getDownloadURL();

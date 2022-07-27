@@ -1,12 +1,14 @@
 import {Image, StyleSheet, Dimensions} from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import CameraRoll from '@react-native-community/cameraroll';
 
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {AppStackParamList} from '../navigation/StackNavigators';
 import {FlashList} from '@shopify/flash-list';
-import ImageItem from '../components/ImageItem';
+// import ImageItem from '../components/ImageItem';
+import {createRows} from '../util/functions';
+import ImageRow from '../components/ImageRow';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ViewAlbum'>;
 
@@ -14,6 +16,8 @@ const screenWidth = Dimensions.get('screen').width;
 
 const ViewAlbumScreen = ({navigation, route}: Props) => {
   const [images, setImages] = useState<string[]>([]);
+
+  const rows = useMemo(() => createRows(images, 3), [images]);
 
   const getPhotos = useCallback(async () => {
     const d = await CameraRoll.getPhotos({
@@ -27,16 +31,20 @@ const ViewAlbumScreen = ({navigation, route}: Props) => {
   useEffect(() => {
     getPhotos();
   }, [getPhotos]);
+
+  const handleImagePress = (uri: string) => {
+    navigation.navigate('ViewImage', {uri});
+  };
+
   return (
     <FlashList
-      data={images}
+      data={rows}
       estimatedItemSize={96}
-      numColumns={4}
       renderItem={data => (
-        <ImageItem
-          uri={data.item}
-          width={screenWidth / 4}
-          onPress={() => navigation.navigate('ViewImage', {uri: data.item})}
+        <ImageRow
+          data={data.item}
+          width={screenWidth / 3}
+          onPress={handleImagePress}
         />
       )}
     />
