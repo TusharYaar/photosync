@@ -13,12 +13,15 @@ import Contact from '../components/Contact';
 import {TextInput, Button} from 'react-native-paper';
 import {PhotoDocument} from '../util/types';
 
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 type Props = NativeStackScreenProps<AppStackParamList, 'ViewImage'>;
 
 const screenWidth = Dimensions.get('screen').width;
 
 const ViewImageScreen = ({route}: Props) => {
-  const {sharedByUser, addImageDocForShare} = useFirestore();
+  const {sharedByUser, sharedWithUser, addImageDocForShare, stopPhotoSharing} =
+    useFirestore();
   const {contacts, user} = useApp();
   const [size, setSize] = useState({width: screenWidth, height: 0});
   const [selected, setSelected] = useState<string[]>([]);
@@ -26,27 +29,36 @@ const ViewImageScreen = ({route}: Props) => {
   const [searchValue] = useDebounce(search, 500);
 
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%', '100%'], []);
+  const snapPoints = useMemo(() => ['50%', '70%', '100%'], []);
 
-  const docDetails = useMemo(() => {
-    const path = route.params.uri.split('/');
-    const name = path[path.length - 1];
-    const index = sharedByUser.findIndex(d => d.name === name);
-    if (index == -1) return {name};
-    else {
-      return sharedByUser[index];
+  const docDetails: PhotoDocument = useMemo(() => {
+    let photo = sharedByUser.find(d => d.path === route.params.uri);
+    if (photo) setSelected(photo.sharedWith);
+    if (!photo) {
+      photo = sharedWithUser.find(d => d.path === route.params.uri);
     }
-  }, [route.params.uri]);
+
+    if (!photo) {
+      const path = route.params.uri.split('/');
+      const name = path[path.length - 1];
+      photo = {
+        name,
+        path: route.params.uri,
+        owner: user?.phoneNumber || '',
+        id: '',
+        ref: '',
+        sharedWith: [] as string[],
+        downloadedBy: [] as string[],
+      };
+    }
+    return photo;
+  }, [route.params.uri, user]);
 
   const handleSnapPress = useCallback(() => {
-    // console.log(sheetRef.current)
     sheetRef.current?.snapToIndex(1);
   }, []);
-  const handleClosePress = useCallback(() => {
-    sheetRef.current?.close();
-  }, []);
 
-  const addSlection = (phone: string, select: boolean) => {
+  const addSelection = (phone: string, select: boolean) => {
     if (select) setSelected(state => [...state, phone]);
     else setSelected(state => state.filter(i => i !== phone));
   };
@@ -65,7 +77,7 @@ const ViewImageScreen = ({route}: Props) => {
         const sharedWith = doc.sharedWith;
         console.log(sharedWith);
       } else {
-        const newDoc: Omit<PhotoDocument, 'id'> = {
+        const newDoc: Omit<PhotoDocument, 'id' | 'ref'> = {
           name: docDetails.name,
           owner: user?.phoneNumber || '',
           path: route.params.uri,
@@ -83,32 +95,66 @@ const ViewImageScreen = ({route}: Props) => {
     sheetRef.current?.close();
   };
 
+  const stopSharing = () => {
+    if (stopPhotoSharing) stopPhotoSharing(docDetails);
+  };
+
+  const contactData = useMemo(() => {
+    return contacts.filter(c =>
+      searchValue.length > 0
+        ? c.displayName.toLowerCase().includes(searchValue.toLowerCase())
+        : true,
+    );
+  }, [selected, searchValue]);
+
   return (
     <View style={styles.screen}>
       <View style={styles.imageContainer}>
         <Image source={{uri: route.params.uri}} style={[size]} />
       </View>
-      <ImageToolbar onPressShare={handleSnapPress} />
-      <BottomSheet ref={sheetRef} snapPoints={snapPoints}>
-        <View>
-          <TextInput value={search} onChangeText={text => setSearch(text)} />
-          <Button onPress={() => {}}>Stop Sharing</Button>
-          <Button onPress={handleClosePress}>Cancel</Button>
-          <Button onPress={shareImageWithOthers}>
-            Share with {selected.length} others
-          </Button>
+      <ImageToolbar
+        onPressShare={handleSnapPress}
+        showShare={docDetails.owner === user?.phoneNumber || false}
+      />
+      <BottomSheet
+        ref={sheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}>
+        <View style={styles.sheetOptionContainer}>
+          <TextInput
+            value={search}
+            onChangeText={text => setSearch(text)}
+            dense={true}
+            mode={'outlined'}
+            label={'Name'}
+            right={<TextInput.Icon name="magnify" />}
+          />
+          <View style={styles.sheetBtnContainer}>
+            <Button
+              onPress={stopSharing}
+              mode="contained"
+              color="red"
+              style={styles.stopSharingBtn}>
+              <Icon name="cancel" size={18} />
+            </Button>
+            <View style={styles.shareBtnContainer}>
+              <Button
+                onPress={shareImageWithOthers}
+                style={styles.shareBtn}
+                mode="contained">
+                Share with {selected.length} others
+              </Button>
+            </View>
+          </View>
         </View>
         <BottomSheetFlatList
-          data={contacts.filter(c =>
-            searchValue.length > 0
-              ? c.displayName.toLowerCase().includes(searchValue.toLowerCase())
-              : true,
-          )}
+          data={contactData}
           keyExtractor={i => i.recordID}
           renderItem={i => (
             <Contact
               data={i.item}
-              onPress={addSlection}
+              onPress={addSelection}
               isSelected={selected.includes(i.item.phoneNumbers[0].number)}
             />
           )}
@@ -130,6 +176,22 @@ const styles = StyleSheet.create({
   },
   toolbar: {
     height: 50,
-    backgroundColor: 'red',
+  },
+  sheetOptionContainer: {
+    paddingHorizontal: 10,
+  },
+  sheetBtnContainer: {
+    flexDirection: 'row',
+    marginVertical: 10,
+  },
+  stopSharingBtn: {
+    width: '20%',
+  },
+  shareBtnContainer: {
+    width: '80%',
+    paddingLeft: 10,
+  },
+  shareBtn: {
+    width: '100%',
   },
 });

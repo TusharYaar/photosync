@@ -3,6 +3,7 @@ export type PhotoDocument = {
   name: string;
   path: string;
   owner: string;
+  ref: string;
   sharedWith: string[];
   downloadedBy: string[];
 };

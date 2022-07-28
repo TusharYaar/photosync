@@ -20,7 +20,6 @@ const ViewSyncAlbumScreen = ({navigation}: Props) => {
   const {sharedByUser, sharedWithUser} = useFirestore();
 
   const handleImagePress = (uri: string) => {
-    console.log('Called');
     navigation.navigate('ViewImage', {uri});
   };
 

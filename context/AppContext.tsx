@@ -92,7 +92,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
     if (haveContactPermission)
       Contacts.getAll().then(data => {
         data = data
-          .filter(d => d.phoneNumbers.length === 1)
+          .filter(d => d.phoneNumbers.length >= 1)
           .sort((a, b) => a.displayName.localeCompare(b.displayName));
         setContacts(data);
       });

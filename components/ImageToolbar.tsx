@@ -4,14 +4,17 @@ import {IconButton, TouchableRipple} from 'react-native-paper';
 
 type Props = {
   onPressShare: () => void;
+  showShare: boolean;
 };
 
-const ImageToolbar = ({onPressShare}: Props) => {
+const ImageToolbar = ({onPressShare, showShare = true}: Props) => {
   return (
     <View>
-      <TouchableRipple onPress={onPressShare}>
-        <IconButton icon={'share-variant'} />
-      </TouchableRipple>
+      {showShare && (
+        <TouchableRipple onPress={onPressShare}>
+          {showShare && <IconButton icon={'share-variant'} />}
+        </TouchableRipple>
+      )}
     </View>
   );
 };

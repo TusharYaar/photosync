@@ -14,7 +14,8 @@ import {PhotoDocument} from '../util/types';
 type FirestoreContext = {
   sharedByUser: PhotoDocument[];
   sharedWithUser: PhotoDocument[];
-  addImageDocForShare?: (doc: Omit<PhotoDocument, 'id'>) => void;
+  addImageDocForShare?: (doc: Omit<PhotoDocument, 'id' | 'ref'>) => void;
+  stopPhotoSharing?: (doc: PhotoDocument) => void;
 };
 
 const initialState: FirestoreContext = {
@@ -69,20 +70,37 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
     }
   }, [user]);
 
-  const addImageDocForShare = async (doc: Omit<PhotoDocument, 'id'>) => {
-    const path = await uploadImageToStorage(doc);
+  const addImageDocForShare = async (
+    doc: Omit<PhotoDocument, 'id' | 'ref'>,
+  ) => {
+    const [ref, path] = await uploadImageToStorage(doc);
     await firestore()
       .collection('Photos')
-      .add({...doc, path});
+      .add({...doc, ref, path});
     showSnackbar('Shared');
   };
 
-  const uploadImageToStorage = async (doc: Omit<PhotoDocument, 'id'>) => {
+  const uploadImageToStorage = async (
+    doc: Omit<PhotoDocument, 'id' | 'ref'>,
+  ) => {
     showSnackbar('Uploading');
-    const reference = storage().ref(`${doc.owner}/${doc.name}`);
+    const ref = `${doc.owner}/${doc.name}`;
+    const reference = storage().ref(ref);
     await reference.putFile(doc.path);
     const path = await reference.getDownloadURL();
-    return path;
+    return [ref, path];
+  };
+
+  const deletePhotoFromStorage = async (doc: PhotoDocument) => {
+    const ref = storage().ref(doc.ref);
+    await ref.delete();
+  };
+
+  const stopPhotoSharing = async (doc: PhotoDocument) => {
+    const copy = doc;
+    await firestore().collection('Photos').doc(doc.id).delete();
+    showSnackbar('Sharing Stopped');
+    await deletePhotoFromStorage(copy);
   };
 
   return (
@@ -91,6 +109,7 @@ const FirestoreProvider = ({children}: {children: React.ReactNode}) => {
         sharedByUser,
         sharedWithUser,
         addImageDocForShare,
+        stopPhotoSharing,
       }}>
       {children}
     </FirestoreContext.Provider>
