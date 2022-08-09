@@ -269,6 +269,10 @@ dependencies {
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
+    implementation 'com.google.mlkit:vision-common:16.5.0'
+    implementation 'com.google.mlkit:face-detection:16.1.5'
+
+
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
     }

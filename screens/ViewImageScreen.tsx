@@ -1,4 +1,11 @@
-import {Dimensions, Image, StyleSheet, View} from 'react-native';
+import {
+  Dimensions,
+  Image,
+  StyleSheet,
+  View,
+  ImageBackground,
+  Text,
+} from 'react-native';
 import React, {useEffect, useState, useRef, useMemo, useCallback} from 'react';
 import {useDebounce} from 'use-debounce';
 
@@ -14,6 +21,8 @@ import {TextInput, Button} from 'react-native-paper';
 import {PhotoDocument} from '../util/types';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {getFaces, FaceBound} from '../mlkit';
+import ViewFace from '../components/ViewFaces';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ViewImage'>;
 
@@ -23,11 +32,17 @@ const ViewImageScreen = ({route}: Props) => {
   const {sharedByUser, sharedWithUser, addImageDocForShare, stopPhotoSharing} =
     useFirestore();
   const {contacts, user} = useApp();
-  const [size, setSize] = useState({width: screenWidth, height: 0});
+  const [dimensions, setDimensions] = useState({
+    scaled: {width: screenWidth, height: 0},
+    original: {
+      width: 0,
+      height: 0,
+    },
+  });
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [searchValue] = useDebounce(search, 500);
-
+  const [detectedFaces, setDetectedFaces] = useState<FaceBound[]>([]);
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '70%', '100%'], []);
 
@@ -66,8 +81,26 @@ const ViewImageScreen = ({route}: Props) => {
   useEffect(() => {
     Image.getSize(route.params.uri, (width, height) => {
       const h = (height * screenWidth) / width;
-      setSize({width: screenWidth, height: h});
+      setDimensions({
+        original: {
+          width,
+          height,
+        },
+        scaled: {
+          width: screenWidth,
+          height: h,
+        },
+      });
     });
+  }, [route.params.uri]);
+
+  const detectFaces = useCallback(async () => {
+    try {
+      const data = await getFaces(route.params.uri);
+      setDetectedFaces(data.faces);
+    } catch (error) {
+      console.log(error);
+    }
   }, [route.params.uri]);
 
   const shareImageWithOthers = () => {
@@ -75,7 +108,6 @@ const ViewImageScreen = ({route}: Props) => {
       const doc = sharedByUser.find(d => d.name === docDetails.name);
       if (doc?.id) {
         const sharedWith = doc.sharedWith;
-        console.log(sharedWith);
       } else {
         const newDoc: Omit<PhotoDocument, 'id' | 'ref'> = {
           name: docDetails.name,
@@ -110,10 +142,25 @@ const ViewImageScreen = ({route}: Props) => {
   return (
     <View style={styles.screen}>
       <View style={styles.imageContainer}>
-        <Image source={{uri: route.params.uri}} style={[size]} />
+        <ImageBackground
+          source={{uri: route.params.uri}}
+          style={[dimensions.scaled]}>
+          <>
+            {detectedFaces.map((face, index) => (
+              <ViewFace
+                face={face}
+                style={styles.faceOverlay}
+                key={index}
+                originalDimensions={dimensions.original}
+                scaledDimensions={dimensions.scaled}
+              />
+            ))}
+          </>
+        </ImageBackground>
       </View>
       <ImageToolbar
         onPressShare={handleSnapPress}
+        onPressFace={detectFaces}
         showShare={docDetails.owner === user?.phoneNumber || false}
       />
       <BottomSheet
@@ -173,6 +220,10 @@ const styles = StyleSheet.create({
   imageContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  faceOverlay: {
+    backgroundColor: 'orange',
+    position: 'absolute',
   },
   toolbar: {
     height: 50,
