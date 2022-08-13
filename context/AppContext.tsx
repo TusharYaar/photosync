@@ -18,6 +18,7 @@ type AppContext = {
   contacts: Contacts.Contact[];
   isOnline: boolean | null;
   isLoggedIn: boolean;
+  signOutUser: () => void;
   user: FirebaseAuthTypes.User | null;
   showSnackbar: (message: string) => void;
 };
@@ -30,7 +31,7 @@ const initialState: AppContext = {
   isLoggedIn: false,
   user: null,
   showSnackbar: (message: string) => {},
-  //   theme: 'light',
+  signOutUser: () => {},
 };
 
 export const AppContext = createContext(initialState);
@@ -73,9 +74,15 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
     }
   }, []);
 
+  const signOutUser = () => {
+    auth().signOut();
+  };
+
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     setUser(user);
+    // signOutUser();
+    console.log(user);
     if (user?.uid) setIsLoggedIn(true);
   }
 
@@ -128,6 +135,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         user,
         contacts,
         showSnackbar,
+        signOutUser,
       }}>
       <>
         {children}
