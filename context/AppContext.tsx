@@ -11,10 +11,9 @@ import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import Contacts from 'react-native-contacts';
 import NetInfo from '@react-native-community/netinfo';
 import {Snackbar} from 'react-native-paper';
+import {usePermission} from './PermissionContext';
 
 type AppContext = {
-  haveStoragePermission: boolean;
-  haveContactPermission: boolean;
   contacts: Contacts.Contact[];
   isOnline: boolean | null;
   isLoggedIn: boolean;
@@ -24,8 +23,6 @@ type AppContext = {
 };
 
 const initialState: AppContext = {
-  haveStoragePermission: false,
-  haveContactPermission: false,
   contacts: [],
   isOnline: true,
   isLoggedIn: false,
@@ -38,41 +35,14 @@ export const AppContext = createContext(initialState);
 
 export const useApp = () => useContext(AppContext);
 const AppProvider = ({children}: {children: React.ReactNode}) => {
-  const [haveStoragePermission, setHaveStoragePermission] = useState(false);
-  const [haveContactPermission, setHaveContactPermission] = useState(false);
+  const {hasContactPermission} = usePermission();
+
   const [isOnline, setIsOnline] = useState<boolean | null>(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
 
   const [snackbar, setSnackbar] = useState({message: '', visible: false});
-
-  const checkAndroidPermission = useCallback(async () => {
-    const contactPermission = PermissionsAndroid.PERMISSIONS.READ_CONTACTS;
-    const storagePermission =
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
-    const hasContactPermission = await PermissionsAndroid.check(
-      contactPermission,
-    );
-    const hasStoragePermission = await PermissionsAndroid.check(
-      storagePermission,
-    );
-    const request: Permission[] = [];
-
-    if (hasContactPermission) setHaveContactPermission(hasContactPermission);
-    else request.push(contactPermission);
-
-    if (hasStoragePermission) setHaveStoragePermission(hasStoragePermission);
-    else request.push(storagePermission);
-
-    if (request.length > 0) {
-      const status = await PermissionsAndroid.requestMultiple(request);
-      if (status[contactPermission])
-        setHaveContactPermission(status[contactPermission] === 'granted');
-      if (status[storagePermission])
-        setHaveContactPermission(status[storagePermission] === 'granted');
-    }
-  }, []);
 
   const signOutUser = () => {
     auth().signOut();
@@ -82,13 +52,9 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     setUser(user);
     // signOutUser();
-    console.log(user);
+    // console.log(user);
     if (user?.uid) setIsLoggedIn(true);
   }
-
-  useEffect(() => {
-    checkAndroidPermission();
-  }, []);
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
@@ -96,14 +62,14 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   }, []);
 
   useEffect(() => {
-    if (haveContactPermission)
+    if (hasContactPermission)
       Contacts.getAll().then(data => {
         data = data
           .filter(d => d.phoneNumbers.length >= 1)
           .sort((a, b) => a.displayName.localeCompare(b.displayName));
         setContacts(data);
       });
-  }, [haveContactPermission]);
+  }, [hasContactPermission]);
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsOnline(state.isInternetReachable);
@@ -128,8 +94,6 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   return (
     <AppContext.Provider
       value={{
-        haveStoragePermission,
-        haveContactPermission,
         isOnline,
         isLoggedIn,
         user,
