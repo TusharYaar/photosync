@@ -2,7 +2,7 @@ import {createContext, useCallback, useContext} from 'react';
 
 export const BackendContext = createContext({});
 
-export const useApp = () => useContext(BackendContext);
+export const useBackend = () => useContext(BackendContext);
 
 const BackendProvider = ({children}: {children: React.ReactNode}) => {
   const getAvailableUsers = useCallback((numbers: string[]) => {

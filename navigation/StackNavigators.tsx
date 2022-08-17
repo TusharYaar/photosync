@@ -10,9 +10,11 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 // import ViewSyncAlbumScreen from '../screens/ViewSyncAlbumScreen';
 import LoginScreen from '../screens/LoginScreen';
 import InputCodeScreen from '../screens/InputCodeScreen';
+import TermScreen from '../screens/TermScreen';
 export type AppStackParamList = {
   Login: undefined;
   InputCode: {number: string};
+  Terms: undefined;
   // AllAlbum: undefined;
   // ViewAlbum: {data: Album};
   // ViewImage: {
@@ -26,8 +28,15 @@ const AppNavigator = createNativeStackNavigator<AppStackParamList>();
 const AppStack = () => {
   return (
     <AppNavigator.Navigator>
-      <AppNavigator.Screen name="Login" component={LoginScreen} />
-      <AppNavigator.Screen name="InputCode" component={InputCodeScreen} />
+      <AppNavigator.Group
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}>
+        <AppNavigator.Screen name="Login" component={LoginScreen} />
+        <AppNavigator.Screen name="InputCode" component={InputCodeScreen} />
+        <AppNavigator.Screen name="Terms" component={TermScreen} />
+      </AppNavigator.Group>
       {/* <AppNavigator.Screen name="AllAlbum" component={AllAlbumScreen} /> */}
       {/* <AppNavigator.Screen name="ViewAlbum" component={ViewAlbumScreen} /> */}
       {/* <AppNavigator.Screen name="ViewImage" component={ViewImageScreen} /> */}

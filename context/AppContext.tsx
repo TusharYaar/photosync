@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import {Permission, PermissionsAndroid} from 'react-native';
 import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 
 import Contacts from 'react-native-contacts';
@@ -20,6 +19,10 @@ type AppContext = {
   signOutUser: () => void;
   user: FirebaseAuthTypes.User | null;
   showSnackbar: (message: string) => void;
+  signInUser?: (
+    number: string,
+  ) => Promise<FirebaseAuthTypes.ConfirmationResult>;
+  resendCodeIn: number;
 };
 
 const initialState: AppContext = {
@@ -29,6 +32,7 @@ const initialState: AppContext = {
   user: null,
   showSnackbar: (message: string) => {},
   signOutUser: () => {},
+  resendCodeIn: 0,
 };
 
 export const AppContext = createContext(initialState);
@@ -36,23 +40,42 @@ export const AppContext = createContext(initialState);
 export const useApp = () => useContext(AppContext);
 const AppProvider = ({children}: {children: React.ReactNode}) => {
   const {hasContactPermission} = usePermission();
-
   const [isOnline, setIsOnline] = useState<boolean | null>(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
-
   const [snackbar, setSnackbar] = useState({message: '', visible: false});
+  const [countDownInterval, setCountDownInterval] = useState({time: 0, id: 0});
 
-  const signOutUser = () => {
-    auth().signOut();
+  const startCountDownInterval = () => {
+    const interval = setInterval(() => {
+      setCountDownInterval(state => {
+        if (state.time >= 90) {
+          clearInterval(state.id);
+          return {...state, time: 0};
+        }
+        return {...state, time: state.time + 1};
+      });
+    }, 1000);
+    setCountDownInterval(state => ({...state, id: interval}));
   };
+
+  const signInUser = useCallback(
+    async (phoneNumber: string) => {
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      startCountDownInterval();
+      return confirmation;
+    },
+    [auth],
+  );
+
+  const signOutUser = useCallback(() => {
+    auth().signOut();
+  }, [auth]);
 
   // Handle user state changes
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     setUser(user);
-    // signOutUser();
-    // console.log(user);
     if (user?.uid) setIsLoggedIn(true);
   }
 
@@ -70,6 +93,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         setContacts(data);
       });
   }, [hasContactPermission]);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
       setIsOnline(state.isInternetReachable);
@@ -80,7 +104,6 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
 
       // if (state.isInternetReachable) val.value = withDelay(1500, withTiming(0));
     });
-
     return unsubscribe;
   }, []);
 
@@ -99,6 +122,8 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
         user,
         contacts,
         showSnackbar,
+        resendCodeIn: countDownInterval.time,
+        signInUser,
         signOutUser,
       }}>
       <>

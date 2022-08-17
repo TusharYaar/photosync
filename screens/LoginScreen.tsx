@@ -1,12 +1,11 @@
 import React, {useState, useRef, useCallback} from 'react';
-import {View, StyleSheet, Image, Keyboard} from 'react-native';
+import {View, StyleSheet, Keyboard} from 'react-native';
 
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 
 import {
   Button,
   Text,
-  TextInput,
   Headline,
   TouchableRipple,
   Caption,
@@ -23,7 +22,7 @@ import {AppStackParamList} from '../navigation/StackNavigators';
 type Props = NativeStackScreenProps<AppStackParamList, 'Login'>;
 
 const LoginScreen = ({navigation}: Props) => {
-  const [number, setNumber] = useState('');
+  const [number, setNumber] = useState(__DEV__ ? '8989614000' : '');
 
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -76,7 +75,11 @@ const LoginScreen = ({navigation}: Props) => {
         onPressInput={handlePressInput}
       />
       <Button
-        onPress={() => navigation.navigate('InputCode', {number})}
+        onPress={() =>
+          navigation.navigate('InputCode', {
+            number: `${country.dialCode}${number}`,
+          })
+        }
         mode="contained"
         style={styles.button}
         disabled={!number.match('^[0-9]{10}$')}>
