@@ -27,13 +27,15 @@ const InputCodeScreen = ({navigation, route}: Props) => {
   );
 
   useEffect(() => {
-    // signInWithPhoneNumber(phoneNumber);
+    signInWithPhoneNumber(phoneNumber);
   }, [phoneNumber, signInWithPhoneNumber]);
 
   const handleSubmit = async () => {
     try {
+      console.log(confirm?.confirm);
       await confirm?.confirm(code);
-      navigation.replace('Terms');
+      console.log('Done');
+      navigation.replace('Loading');
     } catch (e) {
       console.log(e);
     }

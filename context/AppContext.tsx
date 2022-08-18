@@ -15,7 +15,7 @@ import {usePermission} from './PermissionContext';
 type AppContext = {
   contacts: Contacts.Contact[];
   isOnline: boolean | null;
-  isLoggedIn: boolean;
+  isLoggedIn: boolean | null;
   signOutUser: () => void;
   user: FirebaseAuthTypes.User | null;
   showSnackbar: (message: string) => void;
@@ -28,7 +28,7 @@ type AppContext = {
 const initialState: AppContext = {
   contacts: [],
   isOnline: true,
-  isLoggedIn: false,
+  isLoggedIn: null,
   user: null,
   showSnackbar: (message: string) => {},
   signOutUser: () => {},
@@ -77,6 +77,7 @@ const AppProvider = ({children}: {children: React.ReactNode}) => {
   function onAuthStateChanged(user: FirebaseAuthTypes.User | null) {
     setUser(user);
     if (user?.uid) setIsLoggedIn(true);
+    else setIsLoggedIn(false);
   }
 
   useEffect(() => {
